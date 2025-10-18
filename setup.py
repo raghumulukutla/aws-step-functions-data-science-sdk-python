@@ -1,73 +1,56 @@
-# Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License").
-# You may not use this file except in compliance with the License.
-# A copy of the License is located at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# or in the "license" file accompanying this file. This file is distributed 
-# on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either 
-# express or implied. See the License for the specific language governing 
-# permissions and limitations under the License.
-from __future__ import absolute_import
-
-import os
-from glob import glob
-import sys
+#!/usr/bin/env python3
 
 from setuptools import setup, find_packages
 
+with open("README.md", "r", encoding="utf-8") as fh:
+    long_description = fh.read()
 
-def read(fname):
-    with open(os.path.join(os.path.dirname(__file__), fname)) as f:
-        return f.read()
-
-
-def read_version():
-    return read("VERSION").strip()
-
-
-# Declare minimal set for installation
-required_packages = [
-    "sagemaker>=2.1.0",
-    "boto3>=1.14.38",
-    "pyyaml"
-]
-
-# enum is introduced in Python 3.4. Installing enum back port
-if sys.version_info < (3, 4):
-    required_packages.append("enum34>=1.1.6")
+with open("requirements.txt", "r", encoding="utf-8") as fh:
+    requirements = [line.strip() for line in fh if line.strip() and not line.startswith("#")]
 
 setup(
-    name="stepfunctions",
-    version=read_version(),
-    description="Open source library for developing data science workflows on AWS Step Functions.",
-    packages=find_packages("src"),
+    name="stepfunctions-improved",
+    version="1.0.0",
+    author="Improved Step Functions Team",
+    author_email="team@example.com",
+    description="Improved AWS Step Functions framework with type safety and configuration management",
+    long_description=long_description,
+    long_description_content_type="text/markdown",
+    url="https://github.com/example/stepfunctions-improved",
+    packages=find_packages(where="src"),
     package_dir={"": "src"},
-    py_modules=[os.path.splitext(os.path.basename(path))[0] for path in glob("src/*.py")],
-    long_description=read("README.rst"),
-    author="Amazon Web Services",
-    url="https://github.com/aws/aws-step-functions-data-science-sdk-python",
-    license="Apache License 2.0",
-    keywords="ML Amazon AWS AI Tensorflow MXNet",
     classifiers=[
+        "Development Status :: 4 - Beta",
         "Intended Audience :: Developers",
-        "Natural Language :: English",
         "License :: OSI Approved :: Apache Software License",
-        "Programming Language :: Python",
-        "Programming Language :: Python :: 3.6",
+        "Operating System :: OS Independent",
+        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
+        "Topic :: Software Development :: Libraries :: Python Modules",
+        "Topic :: System :: Distributed Computing",
     ],
-    install_requires=required_packages,
+    python_requires=">=3.8",
+    install_requires=requirements,
     extras_require={
-        "test": [
-            "tox>=3.13.1",
-            "pytest>=4.4.1",
-            "stopit==1.1.2",
-            "tensorflow>=1.3.0",
-            "mock>=2.0.0",
-            "contextlib2==0.5.5",
-            "IPython",
-        ]
-    }
+        "dev": [
+            "pytest>=7.0.0",
+            "pytest-cov>=4.0.0",
+            "pytest-mock>=3.10.0",
+            "black>=22.0.0",
+            "flake8>=5.0.0",
+            "mypy>=1.0.0",
+        ],
+        "docs": [
+            "sphinx>=5.0.0",
+            "sphinx-rtd-theme>=1.2.0",
+        ],
+    },
+    entry_points={
+        "console_scripts": [
+            "stepfunctions-improved=stepfunctions_improved.cli:main",
+        ],
+    },
 )

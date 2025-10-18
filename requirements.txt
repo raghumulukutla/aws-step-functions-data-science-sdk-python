@@ -1,3 +1,21 @@
-sagemaker>=2.1.0
-boto3>=1.14.38
-pyyaml
+# Core dependencies for Improved Step Functions Framework
+dynaconf>=3.1.0
+boto3>=1.26.0
+botocore>=1.29.0
+
+# Development and testing dependencies
+pytest>=7.0.0
+pytest-cov>=4.0.0
+pytest-mock>=3.10.0
+black>=22.0.0
+flake8>=5.0.0
+mypy>=1.0.0
+
+# Documentation dependencies
+sphinx>=5.0.0
+sphinx-rtd-theme>=1.2.0
+
+# Optional dependencies for enhanced functionality
+pydantic>=1.10.0  # For advanced validation
+jsonschema>=4.0.0  # For JSON schema validation
+click>=8.0.0  # For CLI tools

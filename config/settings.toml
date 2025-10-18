@@ -1,0 +1,216 @@
+# Configuration for Improved Step Functions Framework
+
+[default]
+# AWS Configuration
+aws_region = "us-east-1"
+log_level = "INFO"
+
+# Step Functions Configuration
+[default.step_functions]
+execution_role = "arn:aws:iam::123456789012:role/StepFunctionsExecutionRole"
+tags = { Project = "MLPipeline", Team = "DataScience" }
+
+# Lambda Configuration
+[default.lambda]
+timeout = 60
+memory_size = 512
+retry_attempts = 3
+retry_interval = 2
+backoff_rate = 2.0
+retry_errors = [
+    "Lambda.ServiceException",
+    "Lambda.AWSLambdaException", 
+    "Lambda.SdkClientException",
+    "Lambda.TooManyRequestsException"
+]
+
+# SageMaker Configuration
+[default.sagemaker]
+instance_type = "ml.m5.large"
+instance_count = 1
+volume_size = 30
+role_arn = "arn:aws:iam::123456789012:role/SageMakerExecutionRole"
+retry_attempts = 2
+retry_interval = 5
+backoff_rate = 3.0
+
+# DynamoDB Configuration
+[default.dynamodb]
+retry_attempts = 5
+retry_interval = 1
+backoff_rate = 2.0
+
+# SNS Configuration
+[default.sns]
+retry_attempts = 3
+retry_interval = 1
+backoff_rate = 2.0
+
+# S3 Configuration
+[default.s3]
+model_artifacts_bucket = "s3://ml-model-artifacts/"
+data_bucket = "s3://ml-training-data/"
+
+# Pipeline Configuration
+[default.pipelines.ml_training]
+enable_data_validation = true
+training_method = "sagemaker"
+accuracy_threshold = 0.8
+algorithm_spec = { TrainingImage = "382416733822.dkr.ecr.us-east-1.amazonaws.com/xgboost:latest", TrainingInputMode = "File" }
+
+[default.pipelines.data_processing]
+enable_parallel_processing = true
+batch_size = 1000
+
+# Development Environment
+[development]
+aws_region = "us-west-2"
+log_level = "DEBUG"
+auto_deploy = true
+
+[development.lambda]
+timeout = 30
+memory_size = 256
+
+[development.sagemaker]
+instance_type = "ml.t3.medium"
+volume_size = 10
+
+[development.pipelines.ml_training]
+training_method = "lambda"  # Use Lambda for faster dev cycles
+accuracy_threshold = 0.6
+
+# Function mappings for development
+[development.functions]
+validate_data = "dev-validate-data-function"
+preprocess_data = "dev-preprocess-data-function"
+train_model = "dev-train-model-function"
+evaluate_model = "dev-evaluate-model-function"
+deploy_model = "dev-deploy-model-function"
+process_csv_data = "dev-process-csv-function"
+process_json_data = "dev-process-json-function"
+aggregate_data = "dev-aggregate-function"
+process_notification = "dev-notification-function"
+send_slack_notification = "dev-slack-function"
+
+# DynamoDB tables for development
+[development.dynamodb.tables]
+model_metadata = "dev-model-metadata-table"
+training_jobs = "dev-training-jobs-table"
+processed_data = "dev-processed-data-table"
+
+# SNS topics for development
+[development.sns.topics]
+alerts = "arn:aws:sns:us-west-2:123456789012:dev-ml-alerts"
+email_notifications = "arn:aws:sns:us-west-2:123456789012:dev-email-notifications"
+sms_notifications = "arn:aws:sns:us-west-2:123456789012:dev-sms-notifications"
+
+# SQS queues for development
+[development.sqs.queues]
+data_processing = "https://sqs.us-west-2.amazonaws.com/123456789012/dev-data-processing"
+
+# Batch configuration for development
+[development.batch.job_queues]
+training_jobs = "dev-training-job-queue"
+
+[development.batch.job_definitions]
+training_jobs = "dev-training-job-definition"
+
+# Production Environment
+[production]
+log_level = "INFO"
+auto_deploy = false  # Require manual approval
+
+[production.lambda]
+timeout = 120
+memory_size = 1024
+retry_attempts = 5
+
+[production.sagemaker]
+instance_type = "ml.m5.xlarge"
+volume_size = 100
+retry_attempts = 3
+
+[production.pipelines.ml_training]
+training_method = "sagemaker"
+accuracy_threshold = 0.9
+enable_data_validation = true
+
+# Function mappings for production
+[production.functions]
+validate_data = "prod-validate-data-function"
+preprocess_data = "prod-preprocess-data-function"
+train_model = "prod-train-model-function"
+evaluate_model = "prod-evaluate-model-function"
+deploy_model = "prod-deploy-model-function"
+process_csv_data = "prod-process-csv-function"
+process_json_data = "prod-process-json-function"
+aggregate_data = "prod-aggregate-function"
+process_notification = "prod-notification-function"
+send_slack_notification = "prod-slack-function"
+
+# DynamoDB tables for production
+[production.dynamodb.tables]
+model_metadata = "prod-model-metadata-table"
+training_jobs = "prod-training-jobs-table"
+processed_data = "prod-processed-data-table"
+
+# SNS topics for production
+[production.sns.topics]
+alerts = "arn:aws:sns:us-east-1:123456789012:prod-ml-alerts"
+email_notifications = "arn:aws:sns:us-east-1:123456789012:prod-email-notifications"
+sms_notifications = "arn:aws:sns:us-east-1:123456789012:prod-sms-notifications"
+
+# SQS queues for production
+[production.sqs.queues]
+data_processing = "https://sqs.us-east-1.amazonaws.com/123456789012/prod-data-processing"
+
+# Batch configuration for production
+[production.batch.job_queues]
+training_jobs = "prod-training-job-queue"
+
+[production.batch.job_definitions]
+training_jobs = "prod-training-job-definition"
+
+# Staging Environment
+[staging]
+aws_region = "us-east-1"
+log_level = "INFO"
+auto_deploy = true
+
+[staging.lambda]
+timeout = 90
+memory_size = 512
+
+[staging.sagemaker]
+instance_type = "ml.m5.large"
+volume_size = 50
+
+[staging.pipelines.ml_training]
+training_method = "sagemaker"
+accuracy_threshold = 0.85
+
+# Function mappings for staging
+[staging.functions]
+validate_data = "staging-validate-data-function"
+preprocess_data = "staging-preprocess-data-function"
+train_model = "staging-train-model-function"
+evaluate_model = "staging-evaluate-model-function"
+deploy_model = "staging-deploy-model-function"
+process_csv_data = "staging-process-csv-function"
+process_json_data = "staging-process-json-function"
+aggregate_data = "staging-aggregate-function"
+process_notification = "staging-notification-function"
+send_slack_notification = "staging-slack-function"
+
+# DynamoDB tables for staging
+[staging.dynamodb.tables]
+model_metadata = "staging-model-metadata-table"
+training_jobs = "staging-training-jobs-table"
+processed_data = "staging-processed-data-table"
+
+# SNS topics for staging
+[staging.sns.topics]
+alerts = "arn:aws:sns:us-east-1:123456789012:staging-ml-alerts"
+email_notifications = "arn:aws:sns:us-east-1:123456789012:staging-email-notifications"
+sms_notifications = "arn:aws:sns:us-east-1:123456789012:staging-sms-notifications"
