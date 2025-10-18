@@ -11,6 +11,7 @@ from .choice_rules import ChoiceRule
 from .error_handling import RetryConfig, CatchConfig, ErrorHandling
 from .aws_services import AWSServiceIntegrations, ConfigurableAWSServices
 from .sagemaker_integrations import SageMakerIntegrations, ConfigurableSageMakerIntegrations
+from .advanced_integrations import AdvancedAWSIntegrations, ConfigurableAdvancedIntegrations, MLOpsIntegrations
 
 
 class ChoiceBuilder:
@@ -283,6 +284,7 @@ class ConfigurableStepFunctionBuilder(StepFunctionBuilder):
         self.config = config
         self.aws_services = ConfigurableAWSServices(config)
         self.sagemaker = ConfigurableSageMakerIntegrations(config)
+        self.advanced = ConfigurableAdvancedIntegrations(config)
     
     def add_lambda_task(self, state_id: str,
                        logical_function_name: str,
@@ -511,6 +513,209 @@ class ConfigurableStepFunctionBuilder(StepFunctionBuilder):
         
         if retry_config is None:
             retry_config = [ErrorHandling.SAGEMAKER_RETRY]
+        
+        if retry_config:
+            state_def["Retry"] = [retry.to_dict() for retry in retry_config]
+        
+        if catch_config:
+            state_def["Catch"] = [catch.to_dict() for catch in catch_config]
+        
+        self.states[state_id] = state_def
+        return self._link_if_needed(state_id)
+    
+    # Advanced AWS Service Methods
+    def add_codebuild_project(self, state_id: str,
+                            logical_project_name: str,
+                            source_version: Optional[str] = None,
+                            retry_config: Optional[List[RetryConfig]] = None,
+                            catch_config: Optional[List[CatchConfig]] = None,
+                            comment: Optional[str] = None) -> 'ConfigurableStepFunctionBuilder':
+        """Add CodeBuild project execution"""
+        
+        state_def = self.advanced.codebuild_project(
+            logical_project_name=logical_project_name,
+            source_version=source_version
+        )
+        
+        if comment:
+            state_def["Comment"] = comment
+        
+        if retry_config is None:
+            retry_attempts = self.config.get("codebuild.retry_attempts", 2)
+            if retry_attempts > 0:
+                retry_config = [RetryConfig(
+                    error_equals=["CodeBuild.AWSCodeBuildException"],
+                    interval_seconds=5,
+                    max_attempts=retry_attempts,
+                    backoff_rate=2.0
+                )]
+        
+        if retry_config:
+            state_def["Retry"] = [retry.to_dict() for retry in retry_config]
+        
+        if catch_config:
+            state_def["Catch"] = [catch.to_dict() for catch in catch_config]
+        
+        self.states[state_id] = state_def
+        return self._link_if_needed(state_id)
+    
+    def add_athena_query(self, state_id: str,
+                        query_string: str,
+                        logical_workgroup: Optional[str] = None,
+                        retry_config: Optional[List[RetryConfig]] = None,
+                        catch_config: Optional[List[CatchConfig]] = None,
+                        comment: Optional[str] = None) -> 'ConfigurableStepFunctionBuilder':
+        """Add Athena query execution"""
+        
+        state_def = self.advanced.athena_query(
+            query_string=query_string,
+            logical_workgroup=logical_workgroup
+        )
+        
+        if comment:
+            state_def["Comment"] = comment
+        
+        if retry_config is None:
+            retry_attempts = self.config.get("athena.retry_attempts", 3)
+            if retry_attempts > 0:
+                retry_config = [RetryConfig(
+                    error_equals=["Athena.InvalidRequestException", "Athena.InternalServerException"],
+                    interval_seconds=2,
+                    max_attempts=retry_attempts,
+                    backoff_rate=2.0
+                )]
+        
+        if retry_config:
+            state_def["Retry"] = [retry.to_dict() for retry in retry_config]
+        
+        if catch_config:
+            state_def["Catch"] = [catch.to_dict() for catch in catch_config]
+        
+        self.states[state_id] = state_def
+        return self._link_if_needed(state_id)
+    
+    def add_bedrock_model_invocation(self, state_id: str,
+                                   logical_model_name: str,
+                                   model_input: dict,
+                                   retry_config: Optional[List[RetryConfig]] = None,
+                                   catch_config: Optional[List[CatchConfig]] = None,
+                                   comment: Optional[str] = None) -> 'ConfigurableStepFunctionBuilder':
+        """Add Bedrock model invocation"""
+        
+        state_def = self.advanced.bedrock_model_invocation(
+            logical_model_name=logical_model_name,
+            body=model_input
+        )
+        
+        if comment:
+            state_def["Comment"] = comment
+        
+        if retry_config is None:
+            retry_attempts = self.config.get("bedrock.retry_attempts", 3)
+            if retry_attempts > 0:
+                retry_config = [RetryConfig(
+                    error_equals=["Bedrock.ThrottlingException", "Bedrock.ModelTimeoutException"],
+                    interval_seconds=1,
+                    max_attempts=retry_attempts,
+                    backoff_rate=2.0
+                )]
+        
+        if retry_config:
+            state_def["Retry"] = [retry.to_dict() for retry in retry_config]
+        
+        if catch_config:
+            state_def["Catch"] = [catch.to_dict() for catch in catch_config]
+        
+        self.states[state_id] = state_def
+        return self._link_if_needed(state_id)
+    
+    def add_s3_operation(self, state_id: str,
+                        operation: str,
+                        logical_bucket_name: str,
+                        retry_config: Optional[List[RetryConfig]] = None,
+                        catch_config: Optional[List[CatchConfig]] = None,
+                        comment: Optional[str] = None,
+                        **kwargs) -> 'ConfigurableStepFunctionBuilder':
+        """Add S3 operation (listObjects, copyObject, etc.)"""
+        
+        state_def = self.advanced.s3_operation(
+            operation=operation,
+            logical_bucket_name=logical_bucket_name,
+            **kwargs
+        )
+        
+        if comment:
+            state_def["Comment"] = comment
+        
+        if retry_config is None:
+            retry_attempts = self.config.get("s3.retry_attempts", 3)
+            if retry_attempts > 0:
+                retry_config = [RetryConfig(
+                    error_equals=["S3.AmazonS3Exception"],
+                    interval_seconds=1,
+                    max_attempts=retry_attempts,
+                    backoff_rate=2.0
+                )]
+        
+        if retry_config:
+            state_def["Retry"] = [retry.to_dict() for retry in retry_config]
+        
+        if catch_config:
+            state_def["Catch"] = [catch.to_dict() for catch in catch_config]
+        
+        self.states[state_id] = state_def
+        return self._link_if_needed(state_id)
+    
+    def add_secrets_manager_get_secret(self, state_id: str,
+                                     logical_secret_name: str,
+                                     retry_config: Optional[List[RetryConfig]] = None,
+                                     catch_config: Optional[List[CatchConfig]] = None,
+                                     comment: Optional[str] = None) -> 'ConfigurableStepFunctionBuilder':
+        """Add Secrets Manager get secret operation"""
+        
+        state_def = self.advanced.secrets_manager_secret(
+            logical_secret_name=logical_secret_name
+        )
+        
+        if comment:
+            state_def["Comment"] = comment
+        
+        if retry_config is None:
+            retry_config = [RetryConfig(
+                error_equals=["SecretsManager.ResourceNotFoundException", "SecretsManager.InvalidRequestException"],
+                interval_seconds=1,
+                max_attempts=3,
+                backoff_rate=2.0
+            )]
+        
+        if retry_config:
+            state_def["Retry"] = [retry.to_dict() for retry in retry_config]
+        
+        if catch_config:
+            state_def["Catch"] = [catch.to_dict() for catch in catch_config]
+        
+        self.states[state_id] = state_def
+        return self._link_if_needed(state_id)
+    
+    def add_eventbridge_put_events(self, state_id: str,
+                                 events: List[dict],
+                                 retry_config: Optional[List[RetryConfig]] = None,
+                                 catch_config: Optional[List[CatchConfig]] = None,
+                                 comment: Optional[str] = None) -> 'ConfigurableStepFunctionBuilder':
+        """Add EventBridge put events operation"""
+        
+        state_def = AdvancedAWSIntegrations.eventbridge_put_events(entries=events)
+        
+        if comment:
+            state_def["Comment"] = comment
+        
+        if retry_config is None:
+            retry_config = [RetryConfig(
+                error_equals=["Events.InternalException"],
+                interval_seconds=1,
+                max_attempts=3,
+                backoff_rate=2.0
+            )]
         
         if retry_config:
             state_def["Retry"] = [retry.to_dict() for retry in retry_config]

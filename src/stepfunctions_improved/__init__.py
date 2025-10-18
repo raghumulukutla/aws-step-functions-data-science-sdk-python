@@ -14,6 +14,7 @@ from .choice_rules import (
 )
 from .aws_services import AWSServiceIntegrations, ConfigurableAWSServices
 from .sagemaker_integrations import SageMakerIntegrations, ConfigurableSageMakerIntegrations
+from .advanced_integrations import AdvancedAWSIntegrations, ConfigurableAdvancedIntegrations, MLOpsIntegrations
 from .error_handling import RetryConfig, CatchConfig, ErrorHandling
 from .validation import StateMachineValidator, ValidationError
 from .simulation import StateMachineSimulator
@@ -43,6 +44,9 @@ __all__ = [
     "ConfigurableAWSServices",
     "SageMakerIntegrations",
     "ConfigurableSageMakerIntegrations",
+    "AdvancedAWSIntegrations",
+    "ConfigurableAdvancedIntegrations",
+    "MLOpsIntegrations",
     "RetryConfig",
     "CatchConfig", 
     "ErrorHandling",

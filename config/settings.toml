@@ -255,3 +255,82 @@ processed_data = "staging-processed-data-table"
 alerts = "arn:aws:sns:us-east-1:123456789012:staging-ml-alerts"
 email_notifications = "arn:aws:sns:us-east-1:123456789012:staging-email-notifications"
 sms_notifications = "arn:aws:sns:us-east-1:123456789012:staging-sms-notifications"
+# Advanced AWS Services Configuration
+[default.codebuild]
+retry_attempts = 2
+retry_interval = 5
+
+[default.athena]
+output_location = "s3://athena-query-results/"
+retry_attempts = 3
+
+[default.bedrock]
+retry_attempts = 3
+retry_interval = 1
+
+[default.s3]
+retry_attempts = 3
+retry_interval = 1
+
+[default.comprehend]
+role_arn = "arn:aws:iam::123456789012:role/ComprehendServiceRole"
+retry_attempts = 2
+
+[default.textract]
+retry_attempts = 2
+retry_interval = 2
+
+# Environment-specific CodeBuild projects
+[development.codebuild.projects]
+large_data_processor = "dev-large-data-processor"
+model_builder = "dev-model-builder"
+data_validator = "dev-data-validator"
+
+[production.codebuild.projects]
+large_data_processor = "prod-large-data-processor"
+model_builder = "prod-model-builder"
+data_validator = "prod-data-validator"
+
+# Environment-specific Athena workgroups
+[development.athena.workgroups]
+analytics_workgroup = "dev-analytics-workgroup"
+reporting_workgroup = "dev-reporting-workgroup"
+
+[production.athena.workgroups]
+analytics_workgroup = "prod-analytics-workgroup"
+reporting_workgroup = "prod-reporting-workgroup"
+
+# Environment-specific Bedrock models
+[development.bedrock.models]
+claude_model = "anthropic.claude-v2"
+titan_model = "amazon.titan-text-express-v1"
+llama_model = "meta.llama2-13b-chat-v1"
+
+[production.bedrock.models]
+claude_model = "anthropic.claude-v2"
+titan_model = "amazon.titan-text-express-v1"
+llama_model = "meta.llama2-70b-chat-v1"
+
+# Environment-specific S3 buckets
+[development.s3.buckets]
+source_data = "dev-source-data-bucket"
+processed_data = "dev-processed-data-bucket"
+data_lake = "dev-data-lake-bucket"
+staging_data = "dev-staging-data-bucket"
+
+[production.s3.buckets]
+source_data = "prod-source-data-bucket"
+processed_data = "prod-processed-data-bucket"
+data_lake = "prod-data-lake-bucket"
+staging_data = "prod-staging-data-bucket"
+
+# Environment-specific secrets
+[development.secrets]
+database_credentials = "dev/database/credentials"
+api_keys = "dev/external/api-keys"
+ml_model_config = "dev/ml/model-config"
+
+[production.secrets]
+database_credentials = "prod/database/credentials"
+api_keys = "prod/external/api-keys"
+ml_model_config = "prod/ml/model-config"
