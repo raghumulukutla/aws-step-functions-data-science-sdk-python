@@ -26,13 +26,54 @@ retry_errors = [
 
 # SageMaker Configuration
 [default.sagemaker]
-instance_type = "ml.m5.large"
-instance_count = 1
-volume_size = 30
 role_arn = "arn:aws:iam::123456789012:role/SageMakerExecutionRole"
 retry_attempts = 2
 retry_interval = 5
 backoff_rate = 3.0
+
+# Training Configuration
+[default.sagemaker.training]
+instance_type = "ml.m5.large"
+instance_count = 1
+volume_size = 30
+max_runtime = 86400  # 24 hours
+enable_spot_training = false
+enable_network_isolation = false
+
+# Processing Configuration
+[default.sagemaker.processing]
+instance_type = "ml.m5.large"
+instance_count = 1
+volume_size = 30
+retry_attempts = 2
+
+# Transform (Batch Inference) Configuration
+[default.sagemaker.transform]
+instance_type = "ml.m5.large"
+instance_count = 1
+retry_attempts = 2
+
+# Inference Configuration
+[default.sagemaker.inference]
+instance_type = "ml.m5.large"
+initial_instance_count = 1
+enable_data_capture = false
+
+# Hyperparameter Tuning Configuration
+[default.sagemaker.tuning]
+max_jobs = 20
+max_parallel_jobs = 2
+retry_attempts = 1
+
+# AutoML Configuration
+[default.sagemaker.automl]
+max_candidates = 250
+retry_attempts = 1
+
+# VPC Configuration (optional)
+# [default.sagemaker.vpc_config]
+# security_group_ids = ["sg-12345678"]
+# subnets = ["subnet-12345678", "subnet-87654321"]
 
 # DynamoDB Configuration
 [default.dynamodb]

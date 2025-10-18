@@ -10,6 +10,7 @@ from dynaconf import Dynaconf
 from .choice_rules import ChoiceRule
 from .error_handling import RetryConfig, CatchConfig, ErrorHandling
 from .aws_services import AWSServiceIntegrations, ConfigurableAWSServices
+from .sagemaker_integrations import SageMakerIntegrations, ConfigurableSageMakerIntegrations
 
 
 class ChoiceBuilder:
@@ -281,6 +282,7 @@ class ConfigurableStepFunctionBuilder(StepFunctionBuilder):
         super().__init__(name)
         self.config = config
         self.aws_services = ConfigurableAWSServices(config)
+        self.sagemaker = ConfigurableSageMakerIntegrations(config)
     
     def add_lambda_task(self, state_id: str,
                        logical_function_name: str,
@@ -417,6 +419,98 @@ class ConfigurableStepFunctionBuilder(StepFunctionBuilder):
             retry_attempts = self.config.get("sns.retry_attempts", 3)
             if retry_attempts > 0:
                 retry_config = [ErrorHandling.SNS_RETRY]
+        
+        if retry_config:
+            state_def["Retry"] = [retry.to_dict() for retry in retry_config]
+        
+        if catch_config:
+            state_def["Catch"] = [catch.to_dict() for catch in catch_config]
+        
+        self.states[state_id] = state_def
+        return self._link_if_needed(state_id)
+    # Additional SageMaker Methods
+    def add_sagemaker_processing_job(self, state_id: str,
+                                   job_config: dict,
+                                   retry_config: Optional[List[RetryConfig]] = None,
+                                   catch_config: Optional[List[CatchConfig]] = None,
+                                   comment: Optional[str] = None) -> 'ConfigurableStepFunctionBuilder':
+        """Add SageMaker processing job with configuration defaults"""
+        
+        state_def = self.sagemaker.processing_job(job_config)
+        
+        if comment:
+            state_def["Comment"] = comment
+        
+        if retry_config is None:
+            retry_attempts = self.config.get("sagemaker.processing.retry_attempts", 2)
+            if retry_attempts > 0:
+                retry_config = [ErrorHandling.SAGEMAKER_RETRY]
+        
+        if retry_config:
+            state_def["Retry"] = [retry.to_dict() for retry in retry_config]
+        
+        if catch_config:
+            state_def["Catch"] = [catch.to_dict() for catch in catch_config]
+        
+        self.states[state_id] = state_def
+        return self._link_if_needed(state_id)
+    
+    def add_sagemaker_hyperparameter_tuning(self, state_id: str,
+                                          tuning_config: dict,
+                                          retry_config: Optional[List[RetryConfig]] = None,
+                                          catch_config: Optional[List[CatchConfig]] = None,
+                                          comment: Optional[str] = None) -> 'ConfigurableStepFunctionBuilder':
+        """Add SageMaker hyperparameter tuning job"""
+        
+        role_arn = tuning_config.get("role_arn") or self.config.get("sagemaker.role_arn")
+        if not role_arn:
+            raise ValueError("SageMaker role ARN not configured")
+        
+        state_def = SageMakerIntegrations.hyperparameter_tuning_job(
+            tuning_job_name=tuning_config["tuning_job_name"],
+            hyperparameter_tuning_job_config=tuning_config["tuning_config"],
+            training_job_definition=tuning_config["training_job_definition"],
+            role_arn=role_arn
+        )
+        
+        if comment:
+            state_def["Comment"] = comment
+        
+        if retry_config is None:
+            retry_config = [ErrorHandling.SAGEMAKER_RETRY]
+        
+        if retry_config:
+            state_def["Retry"] = [retry.to_dict() for retry in retry_config]
+        
+        if catch_config:
+            state_def["Catch"] = [catch.to_dict() for catch in catch_config]
+        
+        self.states[state_id] = state_def
+        return self._link_if_needed(state_id)
+    
+    def add_sagemaker_transform_job(self, state_id: str,
+                                  transform_config: dict,
+                                  retry_config: Optional[List[RetryConfig]] = None,
+                                  catch_config: Optional[List[CatchConfig]] = None,
+                                  comment: Optional[str] = None) -> 'ConfigurableStepFunctionBuilder':
+        """Add SageMaker transform (batch inference) job"""
+        
+        state_def = SageMakerIntegrations.transform_job(
+            transform_job_name=transform_config["job_name"],
+            model_name=transform_config["model_name"],
+            transform_input=transform_config["transform_input"],
+            transform_output=transform_config["transform_output"],
+            transform_resources=transform_config.get("transform_resources", {
+                "InstanceType": self.config.get("sagemaker.transform.instance_type", "ml.m5.large"),
+                "InstanceCount": self.config.get("sagemaker.transform.instance_count", 1)
+            })
+        )
+        
+        if comment:
+            state_def["Comment"] = comment
+        
+        if retry_config is None:
+            retry_config = [ErrorHandling.SAGEMAKER_RETRY]
         
         if retry_config:
             state_def["Retry"] = [retry.to_dict() for retry in retry_config]

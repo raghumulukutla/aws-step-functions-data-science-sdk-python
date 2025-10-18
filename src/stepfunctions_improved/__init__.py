@@ -13,6 +13,7 @@ from .choice_rules import (
     NumericLessThanEquals, StringEquals, StringMatches, BooleanEquals
 )
 from .aws_services import AWSServiceIntegrations, ConfigurableAWSServices
+from .sagemaker_integrations import SageMakerIntegrations, ConfigurableSageMakerIntegrations
 from .error_handling import RetryConfig, CatchConfig, ErrorHandling
 from .validation import StateMachineValidator, ValidationError
 from .simulation import StateMachineSimulator
@@ -40,6 +41,8 @@ __all__ = [
     "BooleanEquals",
     "AWSServiceIntegrations",
     "ConfigurableAWSServices",
+    "SageMakerIntegrations",
+    "ConfigurableSageMakerIntegrations",
     "RetryConfig",
     "CatchConfig", 
     "ErrorHandling",
